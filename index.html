@@ -61,6 +61,7 @@
 
     /* ── main logo image ── */
     .main-logo-img {
+      display: none !important;
       position:absolute;
       top: -20px;
       left: 50%;
@@ -597,6 +598,11 @@
   const ctx    = canvas.getContext('2d');
   function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
   resize(); window.addEventListener('resize',()=>{ resize(); initOrbs(); });
+
+  // iOS Safari 이모지 폰트 워밍업
+  if(document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => { initOrbs(); });
+  }
 
   const BASE_R=112;
   const ORBS = THEMES.map(d=>Object.assign({},d,{x:0,y:0,vx:0,vy:0,scale:1,targetScale:1,hovered:false,pulse:Math.random()*Math.PI*2}));
