@@ -464,7 +464,7 @@
   <!-- ══ MAIN PAGE ══ -->
   <div class="page" id="page-main">
     
-    <img class="main-logo-img" src="./images/image_01.png" alt="Universal Thread Goods Co." />
+    <img class="main-logo-img" src="https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/UT_LOGO.png" alt="Universal Thread Goods Co." />
     <canvas id="c"></canvas>
     <div class="hint">Choose your theme</div>
   </div>
@@ -604,7 +604,9 @@
   function initOrbs(){
     const cx=canvas.width/2, cy=canvas.height/2;
     const spread=Math.min(canvas.width*.26, window.innerWidth<=767 ? 130 : 230);
-    [[cx-spread,cy+(window.innerWidth<=767?60:110)],[cx,cy+(window.innerWidth<=767?40:80)],[cx+spread,cy+110]].forEach(([x,y],i)=>{
+    [[cx-spread, cy+(window.innerWidth<=767?50:110)],
+       [cx,         cy+(window.innerWidth<=767?30:80)],
+       [cx+spread,  cy+(window.innerWidth<=767?50:110)]].forEach(([x,y],i)=>{
       ORBS[i].x=x; ORBS[i].y=y;
       ORBS[i].vx=(Math.random()-.5)*.8; ORBS[i].vy=(Math.random()-.5)*.8;
     });
@@ -637,7 +639,9 @@
   }
 
   function drawOrb(o){
-    const {x,y,glow,rim,emoji,scale,hovered}=o, sr=o.r*scale;
+    const {x,y,glow,rim,emoji,scale,hovered}=o;
+    const baseR = window.innerWidth<=767 ? 72 : (window.innerWidth<=1024 ? 90 : 112);
+    const sr=baseR*scale;
     const g1=ctx.createRadialGradient(x,y,sr*.3,x,y,sr*2.6);
     g1.addColorStop(0,`rgba(${glow},.13)`); g1.addColorStop(1,`rgba(${glow},0)`);
     ctx.beginPath(); ctx.arc(x,y,sr*2.6,0,Math.PI*2); ctx.fillStyle=g1; ctx.fill();
@@ -650,15 +654,15 @@
     g3.addColorStop(0,'rgba(255,255,255,.28)'); g3.addColorStop(1,'rgba(255,255,255,0)');
     ctx.beginPath(); ctx.arc(x,y,sr,0,Math.PI*2); ctx.fillStyle=g3; ctx.fill();
     const fs=Math.round(sr*.54);
-    ctx.font=`${fs}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font=`${fs}px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
     if(o.id !== 2){
       ctx.globalAlpha=.35; ctx.fillText(emoji,x,y+fs*.04); ctx.globalAlpha=1;
       const ls=Math.round(sr*.38);
-      ctx.font=`${ls}px serif`; ctx.globalAlpha=.7;
+      ctx.font=`${ls}px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',serif`; ctx.globalAlpha=.7;
       ctx.fillText('🔒',x+sr*.28,y-sr*.28); ctx.globalAlpha=1;
-      ctx.font=`bold ${Math.round(sr*.15)}px sans-serif`;
+      ctx.font=`bold ${Math.round(sr*.15)}px -apple-system,sans-serif`;
       ctx.fillStyle='rgba(43,31,20,.45)';
-      ctx.fillText('COMING SOON',x,y+sr*.62);
+      if(sr > 60) ctx.fillText('COMING SOON',x,y+sr*.62);
     } else {
       ctx.globalAlpha=.85; ctx.fillText(emoji,x,y+fs*.04); ctx.globalAlpha=1;
     }
