@@ -434,6 +434,22 @@
       #ut-logo { width:55vw; }
     }
 
+  
+    #orb-emoji-layer {
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:2;
+    }
+    .orb-emoji {
+      position:absolute;
+      transform:translate(-50%,-50%);
+      font-size:52px;
+      line-height:1;
+      transition:opacity .2s;
+      pointer-events:none;
+      user-select:none;
+    }
+    .orb-emoji.faded { opacity:0.35; }
   </style>
 </head>
 <body>
@@ -467,6 +483,7 @@
     
     <img class="main-logo-img" src="https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/UT_LOGO.png" alt="Universal Thread Goods Co." />
     <canvas id="c"></canvas>
+  <div id="orb-emoji-layer"></div>
     <div class="hint">Choose your theme</div>
   </div>
 
@@ -597,7 +614,7 @@
   const canvas = document.getElementById('c');
   const ctx    = canvas.getContext('2d');
   function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
-  resize(); window.addEventListener('resize',()=>{ resize(); initOrbs(); });
+  resize(); window.addEventListener('resize',()=>{ resize(); initOrbs(); if(typeof initEmojiOverlay==='function') initEmojiOverlay(); });
 
   // iOS Safari 이모지 폰트 워밍업
   if(document.fonts && document.fonts.ready) {
@@ -618,6 +635,38 @@
     });
   }
   initOrbs();
+
+  // ── HTML 이모지 오버레이 (iOS Canvas 이모지 대응) ──
+  const emojiLayer = document.getElementById('orb-emoji-layer');
+  const emojiEls = [];
+
+  function initEmojiOverlay() {
+    if(!emojiLayer) return;
+    emojiLayer.innerHTML = '';
+    emojiEls.length = 0;
+    ORBS.forEach((orb) => {
+      const el = document.createElement('div');
+      el.textContent = orb.emoji;
+      el.style.cssText = 'position:absolute;transform:translate(-50%,-50%);pointer-events:none;user-select:none;line-height:1;transition:opacity .2s;';
+      emojiLayer.appendChild(el);
+      emojiEls.push(el);
+    });
+  }
+
+  function updateEmojiOverlay() {
+    ORBS.forEach((orb, i) => {
+      const el = emojiEls[i];
+      if(!el) return;
+      const baseR = window.innerWidth<=767 ? 72 : (window.innerWidth<=1024 ? 90 : 112);
+      const sr = baseR * orb.scale;
+      const fs = Math.round(sr * 0.54);
+      el.style.left = orb.x + 'px';
+      el.style.top = orb.y + 'px';
+      el.style.fontSize = fs + 'px';
+      el.style.opacity = orb.id !== 2 ? '0.35' : '0.85';
+    });
+  }
+  initEmojiOverlay();
 
   const DAMP=.984,PUSH_R=210,PUSH_F=2.5,WALL=18,ATTRACT=.0005,HOVER_S=1.2,SS=.07;
 
@@ -659,18 +708,13 @@
     const g3=ctx.createRadialGradient(x-sr*.24,y-sr*.28,0,x-sr*.24,y-sr*.28,sr*.5);
     g3.addColorStop(0,'rgba(255,255,255,.28)'); g3.addColorStop(1,'rgba(255,255,255,0)');
     ctx.beginPath(); ctx.arc(x,y,sr,0,Math.PI*2); ctx.fillStyle=g3; ctx.fill();
-    const fs=Math.round(sr*.54);
-    ctx.font=`${fs}px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
-    if(o.id !== 2){
-      ctx.globalAlpha=.35; ctx.fillText(emoji,x,y+fs*.04); ctx.globalAlpha=1;
-      const ls=Math.round(sr*.38);
-      ctx.font=`${ls}px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',serif`; ctx.globalAlpha=.7;
-      ctx.fillText('🔒',x+sr*.28,y-sr*.28); ctx.globalAlpha=1;
+    // 이모지는 HTML 레이어(emojiEls)에서 처리
+    // COMING SOON 텍스트만 canvas에 그리기
+    if(o.id !== 2 && sr > 60) {
+      ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.font=`bold ${Math.round(sr*.15)}px -apple-system,sans-serif`;
       ctx.fillStyle='rgba(43,31,20,.45)';
-      if(sr > 60) ctx.fillText('COMING SOON',x,y+sr*.62);
-    } else {
-      ctx.globalAlpha=.85; ctx.fillText(emoji,x,y+fs*.04); ctx.globalAlpha=1;
+      ctx.fillText('COMING SOON',x,y+sr*.62);
     }
   }
 
@@ -712,6 +756,7 @@
     });
     collide(ORBS[0],ORBS[1]); collide(ORBS[1],ORBS[2]); collide(ORBS[0],ORBS[2]);
     ORBS.forEach(o=>drawOrb(o));
+    if(typeof updateEmojiOverlay==="function") updateEmojiOverlay();
     const h=ORBS.find(o=>o.hovered)||null;
     updateLabel(h);
     if(h){ orbLabel.style.left=h.x+'px'; orbLabel.style.top=(h.y-h.r*h.scale-10)+'px'; }
