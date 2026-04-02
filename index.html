@@ -140,7 +140,7 @@
     /* coverflow stage */
     #coverflow-stage {
       position:relative;
-      width:100%; height:78vh;
+      width:100%; height:68vh;
       display:flex; align-items:center; justify-content:center;
       overflow:visible;
       perspective:1000px;
@@ -195,7 +195,7 @@
 
     /* caption below active card */
     #cf-caption {
-      position:absolute; bottom:clamp(52px, 8vh, 80px); left:50%; transform:translateX(-50%);
+      position:absolute; bottom:-80px; left:50%; transform:translateX(-50%);
       text-align:center; white-space:nowrap; pointer-events:none;
       display:flex; flex-direction:column; align-items:center; gap:10px;
     }
@@ -205,10 +205,6 @@
     /* zoom button */
     #zoom-btn {
       display:none;
-      position:absolute;
-      bottom:clamp(8px, 3vh, 24px);
-      left:50%;
-      transform:translateX(-50%);
       align-items:center; justify-content:center;
       width:38px; height:38px; border-radius:50%;
       border:1px solid rgba(43,31,20,.18);
@@ -216,8 +212,8 @@
       backdrop-filter:blur(8px);
       cursor:none;
       pointer-events:auto;
-      z-index:10;
       transition:background .2s, border-color .2s, transform .2s;
+      margin-top:8px;
     }
     #zoom-btn:hover { background:var(--soft); border-color:var(--accent); transform:scale(1.1); }
     #zoom-btn svg { width:15px; height:15px; stroke:var(--text); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
@@ -406,7 +402,7 @@
       #gallery-header { top:52px; }
       #gallery-theme-label { font-size:.5rem; }
       #gallery-theme-title { font-size:clamp(1.8rem, 8vw, 2.8rem); }
-      #coverflow-stage { height:72vh; }
+      #coverflow-stage { height:56vh; }
       .cf-card { width:220px; height:320px; border-radius:14px; }
       #cf-caption { bottom:12px; }
       .cf-cap-num { font-size:.5rem; }
@@ -440,7 +436,7 @@
     }
 
     @media (max-width:1024px) {
-      #coverflow-stage { height:65vh !important; }
+      #coverflow-stage { height:58vh !important; }
       #coverflow-stage {
         height:70vh;
       }
@@ -531,13 +527,13 @@
       <div id="cf-caption">
         <div class="cf-cap-num"  id="cf-cap-num"></div>
         <div class="cf-cap-title" id="cf-cap-title"></div>
+        <button id="zoom-btn" title="확대보기">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="16.5" y1="16.5" x2="22" y2="22"/>
+          </svg>
+        </button>
       </div>
-      <button id="zoom-btn" title="확대보기">
-        <svg viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="7"/>
-          <line x1="16.5" y1="16.5" x2="22" y2="22"/>
-        </svg>
-      </button>
     </div>
 
     <div id="cf-dots"></div>
