@@ -12,7 +12,7 @@
       --bg:#fdf6ee; --text:#2b1f14; --muted:#b09882;
       --accent:#d97b5a; --accent2:#e8b97a; --soft:#f2ddd5;
     }
-    html, body { width:100%; height:100%; background:var(--bg); color:var(--text); font-family:'Syne',sans-serif; overflow:hidden; cursor:none; }
+    html, body { width:100%; height:100%; height:calc(var(--vh, 1vh) * 100); background:var(--bg); color:var(--text); font-family:'Syne',sans-serif; overflow:hidden; cursor:none; }
 
     body::before {
       content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
@@ -427,6 +427,29 @@
       .choose-label { font-size:.5rem; letter-spacing:.2em; }
     }
 
+
+    @media (max-width:767px) {
+      html, body { overflow:hidden; max-width:100vw; }
+      #c { width:100vw !important; }
+    }
+
+    @media (max-width:1024px) {
+      #zoom-btn {
+        bottom:8px !important;
+      }
+      #cf-caption {
+        bottom:-60px !important;
+      }
+      #coverflow-stage {
+        height:70vh;
+      }
+    }
+    @media (max-width:767px) {
+      #cf-caption {
+        bottom:-50px !important;
+      }
+    }
+
     /* 아주 작은 모바일 (~ 390px) */
     @media (max-width:390px) {
       .cf-card { width:180px; height:260px; }
@@ -613,7 +636,11 @@
   ════════════════════════════════ */
   const canvas = document.getElementById('c');
   const ctx    = canvas.getContext('2d');
-  function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+  function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
+  }
   resize(); window.addEventListener('resize',()=>{ resize(); initOrbs(); if(typeof initEmojiOverlay==='function') initEmojiOverlay(); });
 
   // iOS Safari 이모지 폰트 워밍업
@@ -823,6 +850,7 @@
       const card = document.createElement('div');
       card.className = 'cf-card';
       card.style.transition = 'none';
+      card.style.visibility = 'hidden';
 
       if(img.src){
         /* real PNG image — transparent bg shows card background */
@@ -830,6 +858,7 @@
         imgEl.src = img.src;
         imgEl.draggable = false;
         card.appendChild(imgEl);
+        imgEl.onload = () => { applyLayout(cfPos); };
       } else {
         /* placeholder */
         const inner = document.createElement('div');
@@ -853,11 +882,20 @@
     applyLayout(0); // snap instantly on open
     startCfLoop();
     // 이미지 로드 후 레이아웃 재적용 (모바일 초기 렌더 버그 방지)
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        applyLayout(cfPos);
+    const revealCards = () => {
+      applyLayout(0);
+      cards.forEach((c, i) => {
+        setTimeout(() => {
+          c.style.transition = '';
+          c.style.visibility = 'visible';
+        }, i * 20);
       });
-    });
+    };
+    // 즉시 + rAF 두 번으로 확실하게 적용
+    revealCards();
+    requestAnimationFrame(() => requestAnimationFrame(revealCards));
+    // 이미지 로드 완료 시 한 번 더
+    setTimeout(revealCards, 300);
   }
 
   /* ── coverflow constants ── */
