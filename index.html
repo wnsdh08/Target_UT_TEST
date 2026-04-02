@@ -374,9 +374,12 @@
     @media (max-width:1024px) {
       header { padding:20px 32px; }
       #ut-logo { width:clamp(200px, 50vw, 400px); }
-      #gallery-header { top:60px; }
+      #gallery-header { top:56px; }
       #gallery-theme-title { font-size:clamp(2rem, 6vw, 3.5rem); }
-      .cf-card { width:300px; height:440px; }
+      .cf-card { width:260px; height:380px; }
+      #coverflow-stage { height:68vh; }
+      #cf-caption { bottom:-52px !important; }
+      #zoom-btn { bottom:12px !important; }
       #hanger-btn { bottom:20px; right:28px; }
       #about-card { padding:40px 48px; min-width:300px; }
     }
@@ -903,7 +906,7 @@
     const w = window.innerWidth;
     if(w <= 390)  return { GAP:160, SIDE_SCALE:0.55, SIDE_Z:160 };
     if(w <= 767)  return { GAP:200, SIDE_SCALE:0.58, SIDE_Z:180 };
-    if(w <= 1024) return { GAP:260, SIDE_SCALE:0.62, SIDE_Z:220 };
+    if(w <= 1024) return { GAP:220, SIDE_SCALE:0.60, SIDE_Z:200 };
     return { GAP:340, SIDE_SCALE:0.65, SIDE_Z:260 };
   }
   let { GAP, SIDE_SCALE, SIDE_Z } = getLayoutConstants();
@@ -914,6 +917,9 @@
 
   function applyLayout(pos){
     const n = cards.length;
+    // 카드 실제 크기를 DOM에서 읽기 (CSS 반응형 크기 반영)
+    const cardW = cards[0] ? cards[0].offsetWidth : 260;
+    const cardH = cards[0] ? cards[0].offsetHeight : 380;
     cards.forEach((card,i)=>{
       let offset = i - pos;
       while(offset >  n/2) offset -= n;
@@ -927,7 +933,7 @@
         : Math.max(0.38, SIDE_SCALE - (abs-1) * 0.10);
 
       /* NO rotation — cards stay perfectly upright */
-      const tx      = offset * GAP;
+      const tx      = offset * (cardW > 0 ? cardW * 0.85 : GAP);
       /* depth: center pops forward, sides recede */
       const tz      = -abs * SIDE_Z;
       const opacity = Math.max(0, 1 - abs * 0.22);
