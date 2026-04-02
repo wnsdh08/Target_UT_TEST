@@ -388,7 +388,7 @@
       nav a { font-size:.55rem; letter-spacing:.12em; }
       #back-btn { font-size:.55rem; }
 
-      #ut-logo { width:clamp(160px, 70vw, 320px); top:-80px; }
+      #ut-logo { width:clamp(160px, 65vw, 280px); top:8px; transform:translateX(-50%); }
 
       /* 태그라인 */
       .tagline { display:none; }
@@ -626,10 +626,10 @@
 
   function initOrbs(){
     const cx=canvas.width/2, cy=canvas.height/2;
-    const spread=Math.min(canvas.width*.26, window.innerWidth<=767 ? 130 : 230);
-    [[cx-spread, cy+(window.innerWidth<=767?50:110)],
-       [cx,         cy+(window.innerWidth<=767?30:80)],
-       [cx+spread,  cy+(window.innerWidth<=767?50:110)]].forEach(([x,y],i)=>{
+    const spread=Math.min(canvas.width*.26, window.innerWidth<=767 ? 110 : 230);
+    [[cx-spread, window.innerWidth<=767 ? cy-20 : cy+110],
+       [cx,         window.innerWidth<=767 ? cy-40 : cy+80],
+       [cx+spread,  window.innerWidth<=767 ? cy-20 : cy+110]].forEach(([x,y],i)=>{
       ORBS[i].x=x; ORBS[i].y=y;
       ORBS[i].vx=(Math.random()-.5)*.8; ORBS[i].vy=(Math.random()-.5)*.8;
     });
@@ -852,6 +852,12 @@
 
     applyLayout(0); // snap instantly on open
     startCfLoop();
+    // 이미지 로드 후 레이아웃 재적용 (모바일 초기 렌더 버그 방지)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        applyLayout(cfPos);
+      });
+    });
   }
 
   /* ── coverflow constants ── */
