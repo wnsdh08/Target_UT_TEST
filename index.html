@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SHNWON R&D — C1'27 RTW</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --bg:#fdf6ee; --text:#2b1f14; --muted:#b09882;
+      --accent:#d97b5a; --accent2:#e8b97a; --soft:#f2ddd5;
+    }
+    html, body { width:100%; height:100%; background:var(--bg); color:var(--text); font-family:'Syne',sans-serif; overflow:hidden; cursor:none; }
+
+    body::before {
+      content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity:.06;
+    }
+    .blob { position:fixed; border-radius:50%; filter:blur(110px); pointer-events:none; z-index:0; }
+    .blob-1 { width:650px; height:650px; background:#f4c4a833; top:-180px; left:-140px; }
+    .blob-2 { width:500px; height:500px; background:#c8e6d033; bottom:-120px; right:-80px; }
+    .blob-3 { width:400px; height:400px; background:#f9d9b833; top:30%; left:50%; transform:translate(-50%,-50%); }
+    .blob-4 { width:300px; height:300px; background:#e8c4d422; bottom:15%; left:10%; }
+
+    /* ── cursor ── */
+    #cursor { position:fixed; z-index:9999; width:9px; height:9px; border-radius:50%; background:var(--accent); pointer-events:none; transform:translate(-50%,-50%); }
+    #cursor-ring { position:fixed; z-index:9998; width:32px; height:32px; border-radius:50%; border:1.5px solid #d97b5a55; pointer-events:none; transform:translate(-50%,-50%); transition:width .35s cubic-bezier(.22,1,.36,1),height .35s cubic-bezier(.22,1,.36,1),border-color .3s; }
+
+    /* ── header ── */
+    header { position:fixed; top:0; left:0; right:0; z-index:500; display:flex; align-items:center; justify-content:space-between; padding:clamp(12px,3vw,26px) clamp(16px,4vw,52px); }
+    .logo { font-family:'Syne',sans-serif; font-size:.82rem; font-weight:800; letter-spacing:.22em; color:var(--text); text-transform:uppercase; }
+    .logo .rnd { color:var(--accent); font-weight:400; }
+    nav { display:flex; gap:38px; align-items:center; }
+    nav a { font-size:.65rem; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color .3s; }
+    nav a:hover { color:var(--accent); }
+    #back-btn {
+      display:none; align-items:center; gap:8px;
+      font-size:.65rem; letter-spacing:.2em; text-transform:uppercase;
+      color:var(--muted); background:none; border:none; cursor:none;
+      font-family:'Syne',sans-serif; transition:color .3s;
+    }
+    #back-btn:hover { color:var(--accent); }
+    #back-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; }
+
+    /* ── pages ── */
+    .page { position:fixed; inset:0; z-index:10; transition:opacity .5s cubic-bezier(.22,1,.36,1); }
+    #page-main    { opacity:1; pointer-events:auto; }
+    #page-gallery { opacity:0; pointer-events:none; background:var(--bg); }
+
+    body.in-gallery #page-main    { opacity:0; pointer-events:none; visibility:hidden; }
+    body.in-gallery #page-gallery { opacity:1; pointer-events:auto; }
+
+    /* hide fixed overlays when in gallery */
+    body.in-gallery #orb-label { display:none; }
+    body.in-gallery .tagline { opacity:0; pointer-events:none; }
+
+    body.in-gallery .petal     { display:none; }
+
+    /* ── main logo image ── */
+    .main-logo-img {
+      position:absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: clamp(240px, 36vw, 480px);
+      height: auto;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0;
+      animation: fadeLogoUp 1.2s .3s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    @keyframes fadeLogoUp {
+      from { opacity:0; transform:translateX(-50%) translateY(-10px); }
+      to   { opacity:1; transform:translateX(-50%) translateY(0); }
+    }
+
+    /* ── tagline — left-aligned under SHINWON R&D ── */
+    /* ── main: tagline ── */
+    .tagline {
+      position:fixed; top:68px; left:52px;
+      text-align:left; pointer-events:none; z-index:500;
+      animation:fadeUp 1.1s cubic-bezier(.22,1,.36,1) both;
+    }
+    .tagline h1 {
+      font-family:'Syne',sans-serif;
+      font-size:.68rem; font-weight:600;
+      line-height:1.3; letter-spacing:.12em;
+      text-transform:uppercase; color:var(--text);
+    }
+    .tagline h1 .season { color:var(--accent); }
+    .tagline p {
+      margin-top:2px; font-size:.55rem;
+      letter-spacing:.3em; text-transform:uppercase; color:var(--muted);
+    }
+
+    canvas { position:absolute; inset:0; z-index:1; }
+
+    #orb-label { position:fixed; z-index:300; pointer-events:none; transform:translate(-50%,-100%); text-align:center; opacity:0; transition:opacity .22s; padding-bottom:14px; }
+    #orb-label .lbl-sub  { font-size:.56rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); }
+    #orb-label .lbl-title{ font-family:'Cormorant Garamond',serif; font-size:1.35rem; font-weight:300; letter-spacing:.05em; margin-top:3px; color:var(--text); }
+    #orb-label .lbl-count{ font-size:.56rem; letter-spacing:.18em; color:var(--muted); margin-top:4px; }
+    #orb-label .lbl-enter{ margin-top:10px; display:inline-block; font-size:.52rem; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); border:1px solid #d97b5a44; padding:5px 16px; border-radius:100px; }
+
+    .hint { position:absolute; bottom:34px; left:50%; transform:translateX(-50%); font-size:.58rem; letter-spacing:.26em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:12px; z-index:100; pointer-events:none; animation:fadeUp2 1s 1.4s cubic-bezier(.22,1,.36,1) both; }
+    .hint::before,.hint::after { content:''; display:block; width:28px; height:1px; background:var(--muted); opacity:.5; }
+
+    .petal { position:fixed; pointer-events:none; z-index:0; opacity:0; animation:petalDrift linear infinite; }
+    @keyframes petalDrift { 0%{transform:translateY(110vh) rotate(0deg);opacity:0} 8%{opacity:.7} 92%{opacity:.3} 100%{transform:translateY(-8vh) rotate(360deg);opacity:0} }
+    @keyframes fadeUp  { from{opacity:0;transform:translateY(-14px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeUp2 { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+    /* ══════════════════════════════════
+       GALLERY PAGE
+    ══════════════════════════════════ */
+    #page-gallery {
+      background:var(--bg);
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+    }
+
+    /* theme title row */
+    #gallery-header {
+      position:absolute; top:70px; left:0; right:0;
+      text-align:center; pointer-events:none; z-index:20;
+    }
+    #gallery-theme-label {
+      font-size:.6rem; letter-spacing:.3em; text-transform:uppercase; color:var(--muted);
+    }
+    #gallery-theme-title {
+      font-family:'Cormorant Garamond',serif;
+      font-size:clamp(2.2rem,5vw,4.2rem);
+      font-weight:300; letter-spacing:.06em;
+      color:var(--text); margin-top:6px;
+    }
+
+    /* coverflow stage */
+    #coverflow-stage {
+      position:relative;
+      width:100%; height:78vh;
+      display:flex; align-items:center; justify-content:center;
+      overflow:visible;
+      perspective:1000px;
+      transform-style:preserve-3d;
+    }
+
+    /* individual card */
+    .cf-card {
+      position:absolute;
+      width:400px; height:580px;
+      border-radius:20px;
+      overflow:hidden;
+      cursor:none;
+      user-select:none;
+      transition:none;
+      will-change:transform,opacity;
+      /* glass base */
+      background: linear-gradient(145deg, rgba(255,252,248,0.55) 0%, rgba(240,232,220,0.35) 100%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      /* glass border */
+      border: 1px solid rgba(255,255,255,0.55);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.7),
+        inset 0 -1px 0 rgba(200,180,160,0.2),
+        0 8px 32px rgba(43,31,20,0.12);
+      transform-style:flat;
+    }
+    /* glass top sheen */
+    .cf-card::before {
+      content:'';
+      position:absolute; top:0; left:0; right:0; height:45%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 100%);
+      z-index:2; pointer-events:none; border-radius:20px 20px 0 0;
+    }
+    /* PNG images: transparent, model sits on glass */
+    .cf-card img {
+      width:100%; height:100%;
+      object-fit:contain;
+      object-position:center bottom;
+      display:block;
+      pointer-events:none;
+      position:relative; z-index:1;
+    }
+    .cf-card .cf-placeholder {
+      width:100%; height:100%;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:12px; color:var(--muted);
+    }
+    .cf-card .cf-placeholder .cf-emoji { font-size:3rem; }
+    .cf-card .cf-placeholder .cf-num   { font-size:.6rem; letter-spacing:.2em; text-transform:uppercase; }
+
+    /* caption below active card */
+    #cf-caption {
+      position:absolute; bottom:-80px; left:50%; transform:translateX(-50%);
+      text-align:center; white-space:nowrap; pointer-events:none;
+      display:flex; flex-direction:column; align-items:center; gap:10px;
+    }
+    #cf-caption .cf-cap-num   { font-size:.56rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); }
+    #cf-caption .cf-cap-title { font-family:'Cormorant Garamond',serif; font-size:1.15rem; letter-spacing:.05em; color:var(--text); margin-top:2px; }
+
+    /* zoom button */
+    #zoom-btn {
+      display:none;
+      align-items:center; justify-content:center;
+      width:38px; height:38px; border-radius:50%;
+      border:1px solid rgba(43,31,20,.18);
+      background:rgba(253,246,238,.85);
+      backdrop-filter:blur(8px);
+      cursor:none;
+      pointer-events:auto;
+      transition:background .2s, border-color .2s, transform .2s;
+      margin-top:2px;
+    }
+    #zoom-btn:hover { background:var(--soft); border-color:var(--accent); transform:scale(1.1); }
+    #zoom-btn svg { width:15px; height:15px; stroke:var(--text); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+    /* nav dots — hidden */
+    #cf-dots { display:none; }
+    .cf-dot { display:none; }
+
+    /* view toggle button */
+    
+    
+    
+
+    
+    /* ── Lightbox ── */
+    #lightbox {
+      position:fixed; inset:0; z-index:1000;
+      display:none; align-items:center; justify-content:center;
+      opacity:0; pointer-events:none;
+      transition:opacity .35s cubic-bezier(.22,1,.36,1);
+    }
+    #lightbox.open { opacity:1; pointer-events:auto; }
+
+    #lightbox-backdrop {
+      position:absolute; inset:0;
+      background: rgba(253,246,238,0.82);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+    }
+    #lightbox-img-wrap {
+      position:relative; z-index:2;
+      transform: scale(.88);
+      transition: transform .4s cubic-bezier(.22,1,.36,1);
+      max-height: 88vh; max-width: 520px;
+      display:flex; align-items:center; justify-content:center;
+      transform-origin: center center;
+    }
+    #lightbox.open #lightbox-img-wrap { transform: scale(1); }
+
+    #lightbox-img {
+      max-height:88vh; max-width:520px;
+      width:auto; height:auto;
+      object-fit:contain;
+      filter: drop-shadow(0 32px 80px rgba(43,31,20,.18));
+      transition: transform .12s ease-out;
+      transform-origin: center center;
+      user-select:none;
+      cursor: grab;
+    }
+    #lightbox-img:active { cursor: grabbing; }
+
+    /* scroll zoom hint */
+    #lb-zoom-hint {
+      position:absolute; bottom:80px; left:50%; transform:translateX(-50%);
+      font-size:.55rem; letter-spacing:.2em; text-transform:uppercase;
+      color:var(--muted); z-index:3; pointer-events:none;
+      opacity:0; transition:opacity .3s;
+      white-space:nowrap;
+    }
+    #lightbox.open #lb-zoom-hint { opacity:.6; }
+    #lb-zoom-hint.hide { opacity:0 !important; }
+    #lightbox-close {
+      position:absolute; top:28px; right:36px; z-index:3;
+      width:40px; height:40px; border-radius:50%;
+      border:1px solid rgba(43,31,20,.15);
+      background:rgba(253,246,238,.7);
+      display:flex; align-items:center; justify-content:center;
+      cursor:none; transition:background .2s, transform .2s;
+    }
+    #lightbox-close:hover { background:var(--soft); transform:rotate(90deg); }
+    #lightbox-close svg { width:16px; height:16px; stroke:var(--text); fill:none; stroke-width:2; stroke-linecap:round; }
+
+    #lightbox-caption {
+      position:absolute; bottom:36px; left:50%; transform:translateX(-50%);
+      z-index:3; text-align:center; pointer-events:none;
+    }
+    #lightbox-caption .lb-num   { font-size:.56rem; letter-spacing:.25em; text-transform:uppercase; color:var(--muted); }
+    #lightbox-caption .lb-title { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:300; color:var(--text); margin-top:4px; letter-spacing:.04em; }
+
+    /* click hint on center card */
+    .cf-card.is-center::after {
+      content:'↗';
+      position:absolute; top:12px; right:14px;
+      font-size:.7rem; color:rgba(43,31,20,.35);
+      pointer-events:none; z-index:5;
+      transition:opacity .3s;
+    }
+  
+    #hanger-btn {
+      display:none;
+      position:fixed; bottom:28px; right:52px;
+      width:42px; height:42px; border-radius:50%;
+      border:1px solid rgba(43,31,20,.18);
+      background:rgba(253,246,238,.85);
+      backdrop-filter:blur(8px);
+      align-items:center; justify-content:center;
+      cursor:pointer; z-index:1000;
+      transition:background .2s, border-color .2s, transform .2s;
+    }
+    #hanger-btn:hover { background:var(--soft); border-color:var(--accent); transform:scale(1.1); }
+    #hanger-btn svg { width:20px; height:20px; stroke:var(--text); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+    #blank-overlay {
+      display:none; position:fixed; inset:0;
+      background:var(--bg); z-index:999; overflow:hidden;
+    }
+    #blank-overlay.visible { display:block; }
+    #clo-canvas { position:absolute; top:0; left:0; width:100%; height:100%; cursor:grab; }
+    #clo-canvas:active { cursor:grabbing; }
+    #clo-canvas img { position:absolute; pointer-events:auto; will-change:transform; transform-origin:center center; }
+  
+    #ut-logo {
+      position:fixed; top:-128px; left:50%; transform:translateX(-50%);
+      height:auto; width:clamp(280px, 38vw, 560px);
+      z-index:1; pointer-events:none; opacity:0.92;
+    }
+  
+    #about-modal {
+      display:none; position:fixed; inset:0;
+      z-index:9000; align-items:center; justify-content:center;
+    }
+    #about-modal.visible { display:flex; }
+    #about-backdrop {
+      position:absolute; inset:0;
+      background:rgba(43,31,20,.35); backdrop-filter:blur(6px);
+    }
+    #about-card {
+      position:relative; z-index:1;
+      background:rgba(253,246,238,.96);
+      border:1px solid rgba(43,31,20,.1);
+      border-radius:20px; padding:clamp(28px,5vw,52px) clamp(24px,6vw,64px);
+      min-width:min(360px,85vw); text-align:center;
+      box-shadow:0 24px 64px rgba(43,31,20,.12);
+      animation:aboutFadeIn .35s cubic-bezier(.22,1,.36,1);
+    }
+    @keyframes aboutFadeIn {
+      from { opacity:0; transform:translateY(16px) scale(.97); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
+    }
+    #about-card .about-contact { font-size:.6rem; letter-spacing:.25em; text-transform:uppercase; color:var(--accent); margin-bottom:28px; }
+    #about-card .about-company { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:400; color:var(--text); margin-bottom:10px; letter-spacing:.05em; }
+    #about-card a.about-email {
+      display:inline-block; text-decoration:none;
+      padding:10px 20px; border:1px solid rgba(43,31,20,.15);
+      border-radius:40px; margin-bottom:32px;
+      font-size:.85rem; letter-spacing:.08em; color:var(--text);
+      transition:background .2s,color .2s,border-color .2s;
+    }
+    #about-card a.about-email:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+    #about-card .about-presented { font-size:.55rem; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); border-top:1px solid rgba(43,31,20,.1); padding-top:20px; }
+    #about-close { position:absolute; top:16px; right:20px; background:none; border:none; font-size:1.2rem; color:var(--muted); cursor:pointer; transition:color .2s; }
+    #about-close:hover { color:var(--text); }
+  
+    /* ═══════════════════════════════
+       RESPONSIVE — Tablet & Mobile
+    ═══════════════════════════════ */
+
+    /* 태블릿 (768px ~ 1024px) */
+    @media (max-width:1024px) {
+      header { padding:20px 32px; }
+      #ut-logo { width:clamp(200px, 50vw, 400px); }
+      #gallery-header { top:60px; }
+      #gallery-theme-title { font-size:clamp(2rem, 6vw, 3.5rem); }
+      .cf-card { width:300px; height:440px; }
+      #hanger-btn { bottom:20px; right:28px; }
+      #about-card { padding:40px 48px; min-width:300px; }
+    }
+
+    /* 모바일 (~ 767px) */
+    @media (max-width:767px) {
+      header { padding:16px 20px; }
+      .logo { font-size:.7rem; }
+      nav a { font-size:.55rem; letter-spacing:.12em; }
+      #back-btn { font-size:.55rem; }
+
+      #ut-logo { width:clamp(160px, 70vw, 320px); top:-80px; }
+
+      /* 태그라인 */
+      .tagline { display:none; }
+
+      /* 오브 레이블 */
+      #orb-label { display:none; }
+
+      /* 갤러리 */
+      #gallery-header { top:52px; }
+      #gallery-theme-label { font-size:.5rem; }
+      #gallery-theme-title { font-size:clamp(1.8rem, 8vw, 2.8rem); }
+      #coverflow-stage { height:72vh; }
+      .cf-card { width:220px; height:320px; border-radius:14px; }
+      #cf-caption { bottom:12px; }
+      .cf-cap-num { font-size:.5rem; }
+      .cf-cap-title { font-size:1rem; }
+
+      /* 줌 버튼 */
+      #zoom-btn { width:32px; height:32px; }
+      #zoom-btn svg { width:14px; height:14px; }
+
+      /* 옷걸이 버튼 */
+      #hanger-btn { bottom:16px; right:16px; width:36px; height:36px; }
+
+      /* 라이트박스 */
+      #lightbox-img-wrap { padding:8px; }
+
+      /* About 모달 */
+      #about-card { padding:32px 28px; min-width:unset; width:88vw; }
+      #about-card .about-company { font-size:1.1rem; }
+
+      /* CLO 보드 */
+      #blank-overlay #clo-canvas img { pointer-events:auto; }
+
+      /* <span class="choose-label">CHOOSE YOUR THEME</span> 텍스트 */
+      .choose-label { font-size:.5rem; letter-spacing:.2em; }
+    }
+
+    /* 아주 작은 모바일 (~ 390px) */
+    @media (max-width:390px) {
+      .cf-card { width:180px; height:260px; }
+      #gallery-theme-title { font-size:1.6rem; }
+      #ut-logo { width:55vw; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+
+  <header>
+    <div class="logo">SHINWON <span class="rnd">R&amp;D</span></div>
+    <nav>
+      <button id="back-btn">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <a href="#" id="about-link">About</a>
+    </nav>
+  </header>
+
+  <!-- tagline fixed below header left -->
+  <div class="tagline">
+    <h1><span class="season">C1&#x27;27</span> RTW Design</h1>
+    <p>For&nbsp;&nbsp;Target</p>
+  </div>
+
+  <!-- ══ MAIN PAGE ══ -->
+  <div class="page" id="page-main">
+    
+    <img class="main-logo-img" src="./images/image_01.png" alt="Universal Thread Goods Co." />
+    <canvas id="c"></canvas>
+    <div class="hint">Choose your theme</div>
+  </div>
+
+  <!-- orb hover label (fixed, always on top) -->
+  <div id="orb-label">
+    <div class="lbl-sub"   id="lbl-sub"></div>
+    <div class="lbl-title" id="lbl-title"></div>
+    <div class="lbl-count" id="lbl-count"></div>
+    <div class="lbl-enter">Tap to enter →</div>
+  </div>
+
+  <!-- ══ GALLERY PAGE ══ -->
+  <div class="page" id="page-gallery">
+    <div id="gallery-header">
+      <div id="gallery-theme-label"></div>
+      <div id="gallery-theme-title"></div>
+    </div>
+
+    <div id="coverflow-stage">
+      <!-- cards injected by JS -->
+      <div id="cf-caption">
+        <div class="cf-cap-num"  id="cf-cap-num"></div>
+        <div class="cf-cap-title" id="cf-cap-title"></div>
+        <button id="zoom-btn" title="확대보기">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="16.5" y1="16.5" x2="22" y2="22"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="cf-dots"></div>
+
+    <!-- view toggle: outfit icon / person icon -->
+
+    <!-- outfit board view -->
+  </div>
+
+  <!-- ── Lightbox ── -->
+  <div id="lightbox">
+    <div id="lightbox-backdrop"></div>
+    <div id="lightbox-img-wrap">
+      <img id="lightbox-img" src="" alt="" />
+    </div>
+    <button id="lightbox-close">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="lightbox-caption">
+      <div class="lb-num"  id="lb-num"></div>
+      <div class="lb-title" id="lb-title"></div>
+    </div>
+    <div id="lb-zoom-hint">scroll to zoom</div></div>
+      <canvas id="lb-canvas" style="display:none;"></canvas>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const HIRES = [
+    "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-1.png",
+    "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-2.png",
+    "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-3.png",
+    "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-4.png",
+    "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-5.png",
+    "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-6.png",
+    "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-7.png",
+  ];
+
+  /* ════════════════════════════════
+     CURSOR
+  ════════════════════════════════ */
+  const cur  = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  let mx=innerWidth/2, my=innerHeight/2, rx=mx, ry=my;
+  document.addEventListener('mousemove',e=>{ mx=e.clientX; my=e.clientY; cur.style.left=mx+'px'; cur.style.top=my+'px'; });
+  (function lerpRing(){ rx+=(mx-rx)*.1; ry+=(my-ry)*.1; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(lerpRing); })();
+
+  /* ════════════════════════════════
+     PETAL PARTICLES
+  ════════════════════════════════ */
+  const petals=['🌸','🌼','🌷','✿','❀'];
+  for(let i=0;i<22;i++){
+    const p=document.createElement('div'); p.className='petal';
+    p.textContent=petals[Math.floor(Math.random()*petals.length)];
+    p.style.left=Math.random()*100+'vw';
+    p.style.fontSize=(8+Math.random()*10)+'px';
+    p.style.animationDuration=(12+Math.random()*18)+'s';
+    p.style.animationDelay=(Math.random()*16)+'s';
+    document.body.appendChild(p);
+  }
+
+  /* ════════════════════════════════
+     THEME DATA
+  ════════════════════════════════ */
+  const THEMES = [
+    {
+      id:0, label:'Theme 01', title:'Petal Blush', count:8,
+      r:window.innerWidth<=767?72:112, glow:'225,152,130', rim:'240,185,165', emoji:'🌸', tc:'#c96a4a',
+      accent:'#e8a090',
+      images: Array.from({length:8},(_,i)=>({ num:`0${i+1}`.slice(-2), cap:`Look ${i+1}` })),
+    },
+    {
+      id:1, label:'Theme 02', title:'Golden Hour', count:8,
+      r:window.innerWidth<=767?72:112, glow:'210,172,100', rim:'235,200,130', emoji:'🌼', tc:'#a07830',
+      accent:'#d4aa60',
+      images: Array.from({length:8},(_,i)=>({ num:`0${i+1}`.slice(-2), cap:`Look ${i+1}` })),
+    },
+    {
+      id:2, label:'Theme 03', title:'Coastal Shift', count:7,
+      r:window.innerWidth<=767?72:112, glow:'185,158,118', rim:'210,185,148', emoji:'🪵', tc:'#7a5c38',
+      accent:'#b89868',
+      images: [
+      "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-1.png",
+      "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-2.png",
+      "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-3.png",
+      "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-4.png",
+      "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-5.png",
+      "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-6.png",
+      "https://cdn.jsdelivr.net/gh/wnsdh08/Target_UT_Responsive_Web_IMG@main/image-7.png"
+      ].map((src,i)=>({src, hires:HIRES[i], num:'0'+(i+1), cap:'Look '+(i+1)})),
+    },
+  ];
+
+  /* ════════════════════════════════
+     MAIN CANVAS / ORBS
+  ════════════════════════════════ */
+  const canvas = document.getElementById('c');
+  const ctx    = canvas.getContext('2d');
+  function resize(){ canvas.width=innerWidth; canvas.height=innerHeight; }
+  resize(); window.addEventListener('resize',()=>{ resize(); initOrbs(); });
+
+  const BASE_R=112;
+  const ORBS = THEMES.map(d=>Object.assign({},d,{x:0,y:0,vx:0,vy:0,scale:1,targetScale:1,hovered:false,pulse:Math.random()*Math.PI*2}));
+
+  function initOrbs(){
+    const cx=canvas.width/2, cy=canvas.height/2;
+    const spread=Math.min(canvas.width*.26, window.innerWidth<=767 ? 130 : 230);
+    [[cx-spread,cy+(window.innerWidth<=767?60:110)],[cx,cy+(window.innerWidth<=767?40:80)],[cx+spread,cy+110]].forEach(([x,y],i)=>{
+      ORBS[i].x=x; ORBS[i].y=y;
+      ORBS[i].vx=(Math.random()-.5)*.8; ORBS[i].vy=(Math.random()-.5)*.8;
+    });
+  }
+  initOrbs();
+
+  const DAMP=.984,PUSH_R=210,PUSH_F=2.5,WALL=18,ATTRACT=.0005,HOVER_S=1.2,SS=.07;
+
+  const orbLabel=document.getElementById('orb-label');
+  const lblSub=document.getElementById('lbl-sub');
+  const lblTitle=document.getElementById('lbl-title');
+  const lblCount=document.getElementById('lbl-count');
+  let prevHov=null;
+
+  function updateLabel(orb){
+    if(orb) canvas.style.cursor = orb.id === 2 ? 'pointer' : 'not-allowed';
+    else canvas.style.cursor = 'none';
+    if(orb===prevHov)return; prevHov=orb;
+    if(orb){
+      lblSub.textContent=orb.label; lblTitle.textContent=orb.title; lblTitle.style.color=orb.tc;
+      lblCount.textContent=orb.count+' looks';
+      orbLabel.style.opacity='1';
+      ring.style.width='54px'; ring.style.height='54px';
+      ring.style.borderColor=`rgba(${orb.rim},.7)`;
+    } else {
+      orbLabel.style.opacity='0';
+      ring.style.width='32px'; ring.style.height='32px';
+      ring.style.borderColor='#d97b5a55';
+    }
+  }
+
+  function drawOrb(o){
+    const {x,y,glow,rim,emoji,scale,hovered}=o, sr=o.r*scale;
+    const g1=ctx.createRadialGradient(x,y,sr*.3,x,y,sr*2.6);
+    g1.addColorStop(0,`rgba(${glow},.13)`); g1.addColorStop(1,`rgba(${glow},0)`);
+    ctx.beginPath(); ctx.arc(x,y,sr*2.6,0,Math.PI*2); ctx.fillStyle=g1; ctx.fill();
+    const g2=ctx.createRadialGradient(x-sr*.25,y-sr*.28,sr*.04,x,y,sr);
+    g2.addColorStop(0,`rgba(${glow},.46)`); g2.addColorStop(.5,`rgba(${glow},.16)`); g2.addColorStop(1,`rgba(${glow},.04)`);
+    ctx.beginPath(); ctx.arc(x,y,sr,0,Math.PI*2); ctx.fillStyle=g2; ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,sr,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(${rim},${hovered?.55:.28})`; ctx.lineWidth=hovered?2:1.2; ctx.stroke();
+    const g3=ctx.createRadialGradient(x-sr*.24,y-sr*.28,0,x-sr*.24,y-sr*.28,sr*.5);
+    g3.addColorStop(0,'rgba(255,255,255,.28)'); g3.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.beginPath(); ctx.arc(x,y,sr,0,Math.PI*2); ctx.fillStyle=g3; ctx.fill();
+    const fs=Math.round(sr*.54);
+    ctx.font=`${fs}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    if(o.id !== 2){
+      ctx.globalAlpha=.35; ctx.fillText(emoji,x,y+fs*.04); ctx.globalAlpha=1;
+      const ls=Math.round(sr*.38);
+      ctx.font=`${ls}px serif`; ctx.globalAlpha=.7;
+      ctx.fillText('🔒',x+sr*.28,y-sr*.28); ctx.globalAlpha=1;
+      ctx.font=`bold ${Math.round(sr*.15)}px sans-serif`;
+      ctx.fillStyle='rgba(43,31,20,.45)';
+      ctx.fillText('COMING SOON',x,y+sr*.62);
+    } else {
+      ctx.globalAlpha=.85; ctx.fillText(emoji,x,y+fs*.04); ctx.globalAlpha=1;
+    }
+  }
+
+  function collide(a,b){
+    const dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy);
+    const minD=(a.r*a.scale+b.r*b.scale)*1.01;
+    if(d<minD&&d>.001){
+      const nx=dx/d,ny=dy/d,ov=(minD-d)*.5;
+      a.x-=nx*ov; a.y-=ny*ov; b.x+=nx*ov; b.y+=ny*ov;
+      const dvx=a.vx-b.vx,dvy=a.vy-b.vy,dot=dvx*nx+dvy*ny;
+      if(dot>0){const imp=dot*.65; a.vx-=imp*nx; a.vy-=imp*ny; b.vx+=imp*nx; b.vy+=imp*ny;}
+    }
+  }
+
+  let lastT=0, animRunning=true;
+  function tick(t){
+    if(!animRunning)return;
+    const dt=Math.min((t-lastT)/16.667,2.5); lastT=t;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const CX=canvas.width/2, CY=canvas.height/2;
+    ORBS.forEach(o=>{
+      o.pulse+=.01*dt;
+      const sr=o.r*o.scale;
+      const dxm=o.x-mx,dym=o.y-my,dm=Math.sqrt(dxm*dxm+dym*dym);
+      if(dm<sr){ o.hovered=true; o.targetScale=HOVER_S; }
+      else {
+        o.hovered=false; o.targetScale=1+.018*Math.sin(o.pulse);
+        if(dm<PUSH_R){ const f=(PUSH_R-dm)/PUSH_R*PUSH_F*dt; o.vx+=(dxm/dm)*f; o.vy+=(dym/dm)*f; }
+      }
+      o.scale+=(o.targetScale-o.scale)*SS*dt;
+      o.vx+=(CX-o.x)*ATTRACT*dt; o.vy+=((CY+110)-o.y)*ATTRACT*dt;
+      o.vx*=Math.pow(DAMP,dt); o.vy*=Math.pow(DAMP,dt);
+      o.x+=o.vx*dt; o.y+=o.vy*dt;
+      const pad=WALL+sr;
+      if(o.x<pad){o.x=pad;o.vx=Math.abs(o.vx)*.55;}
+      if(o.x>canvas.width-pad){o.x=canvas.width-pad;o.vx=-Math.abs(o.vx)*.55;}
+      if(o.y<pad+220){o.y=pad+220;o.vy=Math.abs(o.vy)*.55;}
+      if(o.y>canvas.height-pad){o.y=canvas.height-pad;o.vy=-Math.abs(o.vy)*.55;}
+    });
+    collide(ORBS[0],ORBS[1]); collide(ORBS[1],ORBS[2]); collide(ORBS[0],ORBS[2]);
+    ORBS.forEach(o=>drawOrb(o));
+    const h=ORBS.find(o=>o.hovered)||null;
+    updateLabel(h);
+    if(h){ orbLabel.style.left=h.x+'px'; orbLabel.style.top=(h.y-h.r*h.scale-10)+'px'; }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(t=>{lastT=t; requestAnimationFrame(tick);});
+
+  /* ════════════════════════════════
+     GALLERY / COVERFLOW
+  ════════════════════════════════ */
+  const stage          = document.getElementById('coverflow-stage');
+  const dotsEl         = document.getElementById('cf-dots');
+  const capNum         = document.getElementById('cf-cap-num');
+  const capTitle       = document.getElementById('cf-cap-title');
+  const galLabel       = document.getElementById('gallery-theme-label');
+  const galTitle       = document.getElementById('gallery-theme-title');
+  const backBtn        = document.getElementById('back-btn');
+  const BOARD_MIN   = 0.25, BOARD_MAX = 3.0;
+
+  
+
+  function showCoverflowView(){}
+
+  
+
+  
+
+  /* ── physics state ── */
+  let cards = [];
+  let cfPos    = 0;   // current display position (float)
+  let cfVel    = 0;   // velocity (cards/frame)
+  let cfTarget = 0;   // snap target (integer)
+  let cfSnapping = false;
+  let cfRafId  = null;
+
+  /* drag state */
+  let isDragging  = false;
+  let dragStartX  = 0;
+  let dragLastX   = 0;
+  let dragLastT   = 0;
+  let dragInstVel = 0; // instantaneous velocity during drag
+  let dragDelta   = 0;
+
+  const CARD_PALETTES = [
+    ['#f0ddd5','#e8c8bc','#ddb8a8','#f5e5de','#e0ccc4','#d4b5a8','#ead5cc','#c8a898'],
+    ['#f0e8d0','#e8d8b0','#ddc890','#f5edd8','#e0d0b0','#d4c090','#ead8c0','#c8b080'],
+    ['#e8dece','#ddd0b8','#d0c0a0','#ede5d5','#d8ccb5','#ccc0a0','#d8cebe','#c0b090'],
+  ];
+
+  function buildGallery(theme){
+    activeTheme = theme;
+    cfPos = 0; cfTarget = 0;
+
+    galLabel.textContent = theme.label;
+    galTitle.textContent = theme.title;
+    galTitle.style.color = theme.tc;
+
+    cards.forEach(c=>c.remove()); cards=[];
+    dotsEl.innerHTML='';
+
+    const palette = CARD_PALETTES[theme.id];
+
+    theme.images.forEach((img,i)=>{
+      const card = document.createElement('div');
+      card.className = 'cf-card';
+      card.style.transition = 'none';
+
+      if(img.src){
+        /* real PNG image — transparent bg shows card background */
+        const imgEl = document.createElement('img');
+        imgEl.src = img.src;
+        imgEl.draggable = false;
+        card.appendChild(imgEl);
+      } else {
+        /* placeholder */
+        const inner = document.createElement('div');
+        inner.className = 'cf-placeholder';
+        inner.style.background = palette[i % palette.length];
+        const em = document.createElement('div'); em.className='cf-emoji'; em.textContent=theme.emoji;
+        const nm = document.createElement('div'); nm.className='cf-num';   nm.textContent=`Look ${i+1}`;
+        inner.appendChild(em); inner.appendChild(nm);
+        card.appendChild(inner);
+      }
+
+      /* click handled by stage event delegation below */
+      stage.insertBefore(card, document.getElementById('cf-caption'));
+      cards.push(card);
+
+      const dot = document.createElement('div'); dot.className='cf-dot';
+      dot.addEventListener('click',()=>goTo(i));
+      dotsEl.appendChild(dot);
+    });
+
+    applyLayout(0); // snap instantly on open
+    startCfLoop();
+  }
+
+  /* ── coverflow constants ── */
+  function getLayoutConstants() {
+    const w = window.innerWidth;
+    if(w <= 390)  return { GAP:160, SIDE_SCALE:0.55, SIDE_Z:160 };
+    if(w <= 767)  return { GAP:200, SIDE_SCALE:0.58, SIDE_Z:180 };
+    if(w <= 1024) return { GAP:260, SIDE_SCALE:0.62, SIDE_Z:220 };
+    return { GAP:340, SIDE_SCALE:0.65, SIDE_Z:260 };
+  }
+  let { GAP, SIDE_SCALE, SIDE_Z } = getLayoutConstants();
+  window.addEventListener('resize', () => {
+    const c = getLayoutConstants();
+    GAP = c.GAP; SIDE_SCALE = c.SIDE_SCALE; SIDE_Z = c.SIDE_Z;
+  });
+
+  function applyLayout(pos){
+    const n = cards.length;
+    cards.forEach((card,i)=>{
+      let offset = i - pos;
+      while(offset >  n/2) offset -= n;
+      while(offset < -n/2) offset += n;
+
+      const abs = Math.abs(offset);
+
+      /* scale: 1 at center, SIDE_SCALE at abs=1, flattens beyond */
+      const scale   = abs <= 1
+        ? 1 - (1 - SIDE_SCALE) * abs
+        : Math.max(0.38, SIDE_SCALE - (abs-1) * 0.10);
+
+      /* NO rotation — cards stay perfectly upright */
+      const tx      = offset * GAP;
+      /* depth: center pops forward, sides recede */
+      const tz      = -abs * SIDE_Z;
+      const opacity = Math.max(0, 1 - abs * 0.22);
+      const zIndex  = Math.round(100 - abs * 10);
+      const sh      = abs < 0.3
+        ? `0 32px 72px rgba(43,31,20,.24)`
+        : `0 ${Math.round(8+6*abs)}px ${Math.round(20+16*abs)}px rgba(43,31,20,${Math.max(.04,.16-abs*.03).toFixed(2)})`;
+
+      card.style.transform = `translateX(${tx}px) translateZ(${tz}px) scale(${scale})`;
+      card.style.opacity   = opacity;
+      card.style.zIndex    = zIndex;
+      card.style.boxShadow = sh;
+    });
+
+    const nearest = ((Math.round(pos) % n) + n) % n;
+    document.querySelectorAll('.cf-dot').forEach((d,i)=>d.classList.toggle('active', i===nearest));
+    capNum.textContent   = `${String(nearest+1).padStart(2,'0')} / ${String(n).padStart(2,'0')}`;
+    capTitle.textContent = `Look ${nearest+1}`;
+  }
+
+  /* ── physics animation loop ── */
+  const FRICTION   = 0.88;   // per-frame velocity decay (lower = stops faster)
+  const SNAP_SPEED = 0.12;   // lerp speed when snapping to nearest card
+  const SNAP_THRESHOLD = 0.005; // velocity below this → snap
+
+  function startCfLoop(){
+    if(cfRafId) cancelAnimationFrame(cfRafId);
+    let prev = performance.now();
+
+    function cfTick(now){
+      cfRafId = requestAnimationFrame(cfTick);
+      const n = cards.length; if(!n) return;
+      const dt = Math.min((now - prev) / 16.667, 3); prev = now;
+
+      if(isDragging){
+        /* during drag: position is driven directly, no physics */
+        applyLayout(cfPos);
+        return;
+      }
+
+      if(Math.abs(cfVel) > SNAP_THRESHOLD){
+        /* ── coasting with friction ── */
+        cfSnapping = false;
+        cfPos += cfVel * dt;
+        cfVel *= Math.pow(FRICTION, dt);
+        /* wrap */
+        cfPos = ((cfPos % n) + n) % n;
+      } else {
+        /* ── snap to nearest integer ── */
+        cfVel = 0;
+        if(!cfSnapping){
+          /* find nearest, accounting for loop wrap */
+          let nearest = Math.round(cfPos);
+          let diff = nearest - cfPos;
+          while(diff >  n/2) diff -= n;
+          while(diff < -n/2) diff += n;
+          cfTarget = ((Math.round(cfPos + diff)) % n + n) % n;
+          cfSnapping = true;
+        }
+        let diff = cfTarget - cfPos;
+        while(diff >  n/2) diff -= n;
+        while(diff < -n/2) diff += n;
+        cfPos += diff * SNAP_SPEED * dt;
+        cfPos = ((cfPos % n) + n) % n;
+      }
+
+      applyLayout(cfPos);
+    }
+    cfRafId = requestAnimationFrame(cfTick);
+  }
+
+  /* ── navigate buttons (snap) ── */
+  function goTo(i){
+    const n = cards.length; if(!n) return;
+    cfTarget  = ((i % n) + n) % n;
+    cfSnapping = true;
+    cfVel = 0;
+    applyLayout(cfPos);
+  }
+
+  /* keyboard */
+  document.addEventListener('keydown',e=>{
+    if(!document.body.classList.contains('in-gallery'))return;
+    if(e.key==='ArrowLeft') goTo(cfTarget-1);
+    if(e.key==='ArrowRight')goTo(cfTarget+1);
+    if(e.key==='Escape')exitGallery();
+  });
+
+  /* drag / swipe — physics throw on release */
+  const PX_PER_CARD = 280; // pixels to move one card slot
+
+  function onDragStart(clientX){
+    isDragging   = true;
+    cfSnapping   = false;
+    cfVel        = 0;
+    dragStartX   = clientX;
+    dragLastX    = clientX;
+    dragLastT    = performance.now();
+    dragInstVel  = 0;
+    dragDelta    = 0;
+  }
+
+  function onDragMove(clientX){
+    if(!isDragging) return;
+    const now = performance.now();
+    const dx  = clientX - dragLastX;
+    const dt  = Math.max(now - dragLastT, 1);
+    /* track instantaneous velocity in cards/ms */
+    dragInstVel = (dx / PX_PER_CARD) / dt;
+    dragDelta   = clientX - dragStartX;
+
+    /* directly shift cfPos with finger */
+    const n = cards.length;
+    cfPos = ((cfPos - dx / PX_PER_CARD) % n + n) % n;
+
+    dragLastX = clientX;
+    dragLastT = now;
+  }
+
+  function onDragEnd(){
+    if(!isDragging) return;
+    isDragging = false;
+    cfVel = -dragInstVel * 16.667 * 2.8;
+    cfVel = Math.max(-6, Math.min(6, cfVel));
+    cfSnapping = false;
+    /* reset delta AFTER a short delay so the click event that fires
+       immediately after mouseup doesn't get a stale large dragDelta */
+    setTimeout(()=>{ dragDelta = 0; }, 50);
+  }
+
+  stage.addEventListener('mousedown', e=>{ onDragStart(e.clientX); });
+  document.addEventListener('mousemove', e=>{ onDragMove(e.clientX); });
+  document.addEventListener('mouseup',   ()=>{ onDragEnd(); });
+
+  stage.addEventListener('touchstart', e=>{ onDragStart(e.touches[0].clientX); },{ passive:true });
+  stage.addEventListener('touchmove',  e=>{ onDragMove(e.touches[0].clientX);  },{ passive:true });
+  stage.addEventListener('touchend',   ()=>{ onDragEnd(); });
+
+  /* ════════════════════════════════
+     PAGE TRANSITIONS
+  ════════════════════════════════ */
+  function enterGallery(theme){
+    document.getElementById('ut-logo').style.display = 'none';
+    initHangerBtn(theme);
+    buildGallery(theme);
+    document.body.classList.add('in-gallery');
+    backBtn.style.display='flex';
+    orbLabel.style.opacity='0';
+    prevHov=null;
+    // reset outfit view
+    showCoverflowView();
+    // only show toggle btn if theme has images with src
+  }
+  function exitGallery(){
+    document.getElementById('ut-logo').style.display = '';
+    document.getElementById('hanger-btn').style.display = 'none';
+    document.getElementById('blank-overlay').classList.remove('visible');
+    document.getElementById('icon-hanger').style.display = '';
+    document.getElementById('icon-person').style.display = 'none';
+    document.body.classList.remove('in-gallery');
+    backBtn.style.display='none';
+    showCoverflowView();
+  }
+
+  backBtn.addEventListener('click',exitGallery);
+
+  /* orb click → enter gallery */
+  canvas.addEventListener('click',e=>{
+    ORBS.forEach(o=>{
+      const dx=o.x-e.clientX, dy=o.y-e.clientY;
+      if(Math.sqrt(dx*dx+dy*dy)<o.r*o.scale){
+        if(o.id === 2) enterGallery(THEMES[o.id]);
+      }
+    });
+  });
+
+  /* ── zoom button ── */
+  const zoomBtn = document.getElementById('zoom-btn');
+  zoomBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    const n = cards.length; if(!n) return;
+    const nearest = ((Math.round(cfPos) % n) + n) % n;
+    openLightbox(nearest);
+  });
+
+  /* ── track center card & show zoom btn ── */
+  let centerIndex = 0;
+  const _origApplyLayout = applyLayout;
+  applyLayout = function(pos){
+    _origApplyLayout(pos);
+    const n = cards.length; if(!n) return;
+    const nearest = ((Math.round(pos) % n) + n) % n;
+    if(nearest !== centerIndex){
+      if(cards[centerIndex]) cards[centerIndex].classList.remove('is-center');
+      centerIndex = nearest;
+      if(cards[centerIndex]) cards[centerIndex].classList.add('is-center');
+    }
+    // show zoom btn only when a card with image is centered
+    const imgData = activeTheme && activeTheme.images[nearest];
+    const hasSrc  = imgData && (typeof imgData === 'string' ? imgData : imgData.src);
+    zoomBtn.style.display = hasSrc ? 'flex' : 'none';
+  };
+
+  /* ════════════════════════════════
+     LIGHTBOX
+  ════════════════════════════════ */
+  const lightbox   = document.getElementById('lightbox');
+  const lbImg      = document.getElementById('lightbox-img');
+  const lbNum      = document.getElementById('lb-num');
+  const lbTitle    = document.getElementById('lb-title');
+  const lbClose    = document.getElementById('lightbox-close');
+  const lbBackdrop = document.getElementById('lightbox-backdrop');
+
+  function openLightbox(index){
+    const theme = activeTheme; if(!theme) return;
+    const imgData = theme.images[index]; if(!imgData) return;
+    const src = typeof imgData === 'string' ? imgData : imgData.src;
+    if(!src) return;
+
+    lbImg.setAttribute('src', src);
+    // load high-res version if available
+    if(imgData.hires){
+      const hiresImg = new window.Image();
+      hiresImg.onload = () => { lbImg.setAttribute('src', imgData.hires); };
+      hiresImg.src = imgData.hires;
+    }
+    lbNum.textContent   = String(index+1).padStart(2,'0') + ' / ' + String(theme.images.length).padStart(2,'0');
+    lbTitle.textContent = theme.title + '  \u2014  Look ' + (index+1);
+
+    // reset zoom & pan
+    lbZoom = 1; lbPanX = 0; lbPanY = 0;
+    lbImg.style.transform = 'scale(1)';
+
+    lightbox.style.display = 'flex';
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        lightbox.classList.add('open');
+        // hide hint after 2s
+        setTimeout(()=>{ lbZoomHint.classList.add('hide'); }, 2000);
+      });
+    });
+  }
+
+  function closeLightbox(){
+    lightbox.classList.remove('open');
+    lbZoomHint.classList.remove('hide');
+    setTimeout(()=>{
+      lightbox.style.display = 'none';
+      lbImg.removeAttribute('src');
+      lbZoom = 1; lbPanX = 0; lbPanY = 0;
+      lbImg.style.transform = 'scale(1)';
+    }, 400);
+  }
+
+  /* ── zoom + pan state ── */
+  let lbZoom = 1;
+  let lbPanX = 0, lbPanY = 0;
+  const LB_ZOOM_MIN = 0.5;
+  const LB_ZOOM_MAX = 4.0;
+  const lbZoomHint  = document.getElementById('lb-zoom-hint');
+  let hintHideTimer = null;
+  let lbPanning = false;
+  let lbPanStartX = 0, lbPanStartY = 0;
+  let lbPanOriginX = 0, lbPanOriginY = 0;
+
+  function applyLbTransform(animated){
+    lbImg.style.transition = animated ? 'transform .08s ease-out' : 'none';
+    lbImg.style.transform  =
+      'translate(' + lbPanX.toFixed(1) + 'px,' + lbPanY.toFixed(1) + 'px) scale(' + lbZoom.toFixed(3) + ')';
+  }
+
+  function resetLbTransform(){
+    lbZoom = 1; lbPanX = 0; lbPanY = 0;
+    lbImg.style.transition = 'none';
+    lbImg.style.transform  = 'scale(1)';
+  }
+
+  /* scroll → zoom */
+  lightbox.addEventListener('wheel', e => {
+    if(!lightbox.classList.contains('open')) return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.12 : 0.12;
+    lbZoom = Math.min(LB_ZOOM_MAX, Math.max(LB_ZOOM_MIN, lbZoom + delta));
+    applyLbTransform(true);
+    lbZoomHint.classList.remove('hide');
+    clearTimeout(hintHideTimer);
+    hintHideTimer = setTimeout(()=>{ lbZoomHint.classList.add('hide'); }, 1200);
+  }, { passive: false });
+
+  /* mousedown on image → start pan */
+  lbImg.addEventListener('mousedown', e => {
+    if(!lightbox.classList.contains('open')) return;
+    e.preventDefault();
+    lbPanning = true;
+    lbPanStartX  = e.clientX;
+    lbPanStartY  = e.clientY;
+    lbPanOriginX = lbPanX;
+    lbPanOriginY = lbPanY;
+    lbImg.style.cursor = 'grabbing';
+  });
+
+  document.addEventListener('mousemove', e => {
+    if(!lbPanning) return;
+    lbPanX = lbPanOriginX + (e.clientX - lbPanStartX);
+    lbPanY = lbPanOriginY + (e.clientY - lbPanStartY);
+    applyLbTransform(false);
+  });
+
+  document.addEventListener('mouseup', () => {
+    if(!lbPanning) return;
+    lbPanning = false;
+    lbImg.style.cursor = '';
+  });
+
+  /* double-click → reset zoom & pan */
+  lbImg.addEventListener('dblclick', () => {
+    resetLbTransform();
+  });
+
+  lbClose.addEventListener('click', closeLightbox);
+  lbBackdrop.addEventListener('click', e => {
+    if(lbPanning) return;
+    closeLightbox();
+  });
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape' && lightbox.classList.contains('open')) closeLightbox();
+  });
+
+  /* side card click → slide to it (zoom is handled by zoom button only) */
+  stage.addEventListener('click', e => {
+    if(Math.abs(dragDelta) > 6) return;
+    const card = e.target.closest('.cf-card');
+    if(!card) return;
+    const idx = cards.indexOf(card);
+    if(idx === -1) return;
+    const n = cards.length;
+    const nearest = ((Math.round(cfPos) % n) + n) % n;
+    if(idx !== nearest) goTo(idx);
+  });
+
+
+  /* ── Hanger button ── */
+  let hangerListenerAdded = false;
+  function initHangerBtn(theme) {
+    const hBtn = document.getElementById('hanger-btn');
+    const overlay = document.getElementById('blank-overlay');
+    hBtn.style.display = 'flex';
+    if(!hangerListenerAdded) {
+      const CLO_MAP = {
+        0: ['https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-001.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-012.png'],
+        1: ['https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-002.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-012.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-013.png'],
+        2: ['https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-003.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-014.png'],
+        3: ['https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-004.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-008.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-015.png'],
+        4: ['https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-007.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-012.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-016.png'],
+        5: ['https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-005.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-009.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-010.png'],
+        6: ['https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-006.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-013.png'],
+      };
+      const CLO_LARGE = new Set([
+        'https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-001.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-002.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-003.png',
+        'https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-004.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-005.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-006.png','https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/CLO-007.png'
+      ]);
+      let floatItems = [], floatRaf = null;
+
+      function buildCloBoard(CLO_URLS) {
+        const canvas = document.getElementById('clo-canvas');
+        canvas.innerHTML = ''; floatItems = [];
+        const W = window.innerWidth, H = window.innerHeight;
+        const rotations = [-18,-10,4,14,-22,9,-6,20,-13,3,-16,11,-25,16,-9,23,-7,8];
+        const ITEM_COUNT = window.innerWidth <= 767 ? 10 : 18;
+        for(let i = 0; i < ITEM_COUNT; i++) {
+          const url = CLO_URLS[i % CLO_URLS.length];
+          const isLarge = CLO_LARGE.has(url);
+          const isMobile = window.innerWidth <= 767;
+          const sz = isLarge
+            ? (isMobile ? 150+Math.random()*50 : 280+Math.random()*80)
+            : (isMobile ? 70+Math.random()*30  : 120+Math.random()*60);
+          const el = document.createElement('img');
+          el.src = url; el.crossOrigin = 'anonymous';
+          el.style.width = sz + 'px'; el.style.height = 'auto';
+          el.style.cursor = 'grab';
+          canvas.appendChild(el);
+          floatItems.push({
+            el, sz,
+            x: Math.random()*Math.max(0,W-sz),
+            y: Math.random()*Math.max(0,H-sz),
+            vx:(Math.random()-.5)*.5, vy:(Math.random()-.5)*.5,
+            rot:rotations[i%rotations.length], vrot:(Math.random()-.5)*.05,
+            pulse:Math.random()*Math.PI*2,
+          });
+        }
+      }
+
+      function startFloat(CLO_URLS) {
+        if(floatRaf) cancelAnimationFrame(floatRaf);
+        let dragItem=null, dragOX=0, dragOY=0;
+        floatItems.forEach(item => {
+          item.el.addEventListener('mousedown', e => {
+            dragItem=item; dragOX=e.clientX-item.x; dragOY=e.clientY-item.y;
+            item.vx=0; item.vy=0; item.vrot=0;
+            item.el.style.cursor='grabbing'; item.el.style.zIndex=99;
+            e.preventDefault();
+          });
+          item.el.addEventListener('touchstart', e => {
+            dragItem=item; dragOX=e.touches[0].clientX-item.x; dragOY=e.touches[0].clientY-item.y;
+            item.vx=0; item.vy=0; item.el.style.zIndex=99; e.preventDefault();
+          }, {passive:false});
+        });
+        window.addEventListener('mousemove', e => {
+          if(!dragItem) return;
+          dragItem.x=e.clientX-dragOX; dragItem.y=e.clientY-dragOY;
+        });
+        window.addEventListener('mouseup', () => {
+          if(!dragItem) return;
+          dragItem.vx=(Math.random()-.5)*.8; dragItem.vy=(Math.random()-.5)*.8;
+          dragItem.vrot=(Math.random()-.5)*.08;
+          dragItem.el.style.cursor='grab'; dragItem.el.style.zIndex=''; dragItem=null;
+        });
+        window.addEventListener('touchmove', e => {
+          if(!dragItem) return;
+          dragItem.x=e.touches[0].clientX-dragOX; dragItem.y=e.touches[0].clientY-dragOY;
+          e.preventDefault();
+        }, {passive:false});
+        window.addEventListener('touchend', () => {
+          if(!dragItem) return;
+          dragItem.vx=(Math.random()-.5)*.8; dragItem.vy=(Math.random()-.5)*.8;
+          dragItem.el.style.zIndex=''; dragItem=null;
+        });
+
+        function tick() {
+          floatRaf = requestAnimationFrame(tick);
+          const W=window.innerWidth, H=window.innerHeight;
+          if(dragItem) {
+            const cx=dragItem.x+dragItem.sz/2, cy=dragItem.y+dragItem.sz/2;
+            floatItems.forEach(item => {
+              if(item===dragItem) return;
+              const dx=item.x+item.sz/2-cx, dy=item.y+item.sz/2-cy;
+              const dist=Math.sqrt(dx*dx+dy*dy);
+              if(dist<300&&dist>0.1) {
+                const force=(300-dist)/300*3.0;
+                item.vx+=(dx/dist)*force; item.vy+=(dy/dist)*force;
+                const tx=-dy/dist, ty=dx/dist;
+                item.vx+=tx*force*0.8; item.vy+=ty*force*0.8;
+                item.vrot+=(Math.random()-.5)*.3;
+                const spd=Math.sqrt(item.vx*item.vx+item.vy*item.vy);
+                if(spd>7){item.vx=item.vx/spd*7; item.vy=item.vy/spd*7;}
+              }
+            });
+          }
+          floatItems.forEach(item => {
+            if(item===dragItem) {
+              item.el.style.transform=`translate(${item.x.toFixed(1)}px,${item.y.toFixed(1)}px) rotate(${item.rot.toFixed(2)}deg) scale(1.06)`;
+              return;
+            }
+            item.pulse+=.012; item.x+=item.vx; item.y+=item.vy; item.rot+=item.vrot;
+            item.vx*=.97; item.vy*=.97; item.vrot*=.98;
+            if(item.x<-20) item.vx=Math.abs(item.vx);
+            if(item.x>W-item.sz+20) item.vx=-Math.abs(item.vx);
+            if(item.y<-20) item.vy=Math.abs(item.vy);
+            if(item.y>H-item.sz+20) item.vy=-Math.abs(item.vy);
+            const scale=1+Math.sin(item.pulse)*.012;
+            item.el.style.transform=`translate(${item.x.toFixed(1)}px,${item.y.toFixed(1)}px) rotate(${item.rot.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+          });
+        }
+        tick();
+      }
+
+      function stopFloat() { if(floatRaf){cancelAnimationFrame(floatRaf); floatRaf=null;} }
+
+      hBtn.addEventListener('click', () => {
+        const isVisible = overlay.classList.toggle('visible');
+        document.getElementById('icon-hanger').style.display = isVisible?'none':'';
+        document.getElementById('icon-person').style.display = isVisible?'':'none';
+        hBtn.title = isVisible?'슬롯 보기':'옷 보기';
+        if(isVisible) {
+          const CLO_URLS = CLO_MAP[centerIndex] || CLO_MAP[0];
+          buildCloBoard(CLO_URLS); startFloat(CLO_URLS);
+        } else { stopFloat(); }
+      });
+      hangerListenerAdded = true;
+    }
+  }
+
+  /* ── About modal ── */
+  (function(){
+    var modal = document.getElementById('about-modal');
+    var link = document.getElementById('about-link');
+    var backdrop = document.getElementById('about-backdrop');
+    var closeBtn = document.getElementById('about-close');
+    if(link && modal){
+      link.onclick = function(e){ e.preventDefault(); modal.classList.add('visible'); };
+    }
+    if(backdrop){ backdrop.onclick = function(){ modal.classList.remove('visible'); }; }
+    if(closeBtn){ closeBtn.onclick = function(){ modal.classList.remove('visible'); }; }
+  })();
+
+})();
+</script>
+
+  <img id="ut-logo" src="https://raw.githubusercontent.com/wnsdh08/Target_UT_Responsive_Web_IMG/refs/heads/main/UT_LOGO.png" alt="UT Logo" />
+  <button id="hanger-btn" title="옷 보기">
+    <svg id="icon-hanger" viewBox="0 0 24 24"><path d="M12 3a2 2 0 0 1 2 2c0 .8-.4 1.5-1 2l4.5 3.5A2 2 0 0 1 18 12H6a2 2 0 0 1 .5-1.5L11 7a2.5 2.5 0 0 1-1-2 2 2 0 0 1 2-2z"/><line x1="6" y1="12" x2="6" y2="20"/><line x1="18" y1="12" x2="18" y2="20"/><line x1="6" y1="20" x2="18" y2="20"/></svg>
+    <svg id="icon-person" style="display:none" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a7.5 7.5 0 0 1 13 0"/></svg>
+  </button>
+  <div id="blank-overlay"><div id="clo-canvas"></div></div>
+  <div id="about-modal">
+    <div id="about-backdrop"></div>
+    <div id="about-card">
+      <button id="about-close">✕</button>
+      <div class="about-contact">Contact Us</div>
+      <div class="about-company">SHINWON R&amp;D DESIGN CENTER</div>
+      <a href="/cdn-cgi/l/email-protection#44160a001b0825202d213704372c2d2a332b2a6a272b29" class="about-email"><span class="__cf_email__" data-cfemail="23716d677c6f42474a465063504b4a4d544c4d0d404c4e">[email&#160;protected]</span></a>
+      <div class="about-presented">Presented by Shinwon R&amp;D Design Center</div>
+    </div>
+  </div>
+</body>
+</html>
